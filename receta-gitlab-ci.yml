@@ -1,0 +1,117 @@
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  PROJECT_ID: "-"
+  REGION: "-"
+  DOCKER_HUB_USERNAME: "-"
+  BACKEND_IMAGE: "${DOCKER_HUB_USERNAME}/backend-libreria:${CI_COMMIT_SHORT_SHA}"
+  FRONTEND_IMAGE: "${DOCKER_HUB_USERNAME}/frontend-libreria:${CI_COMMIT_SHORT_SHA}"
+  BACKEND_SERVICE: "backend-libreria"
+  FRONTEND_SERVICE: "frontend-libreria"
+
+default:
+  image: google/cloud-sdk:latest
+  services:
+    - docker:20.10.16-dind
+
+test-backend:
+  stage: test
+  image: node:18-alpine
+  variables:
+    NODE_ENV: "test"
+  script:
+    - cd svc-libreria-don-hector
+    - npm ci
+    - npm test
+  only:
+    - main
+
+build-backend:
+  stage: build
+  before_script:
+    - echo "$GCP_SERVICE_KEY_BASE64" | base64 -d > /tmp/gcp-key.json
+    - gcloud auth activate-service-account --key-file=/tmp/gcp-key.json
+    - gcloud config set project ${PROJECT_ID}
+    - echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
+  script:
+    - ls -la
+    - cd svc-libreria-don-hector || cd backend # Intenta ambas rutas
+    # Docker setup
+    - export DOCKER_HOST="tcp://docker:2375"
+    - unset DOCKER_TLS_CERTDIR 
+    - unset DOCKER_TLS_VERIFY
+    - docker info
+    - docker build -t ${BACKEND_IMAGE} .
+    - docker push ${BACKEND_IMAGE}
+  only:
+    - main
+
+build-frontend:
+  stage: build
+  before_script:
+    - echo "$GCP_SERVICE_KEY_BASE64" | base64 -d > /tmp/gcp-key.json
+    - gcloud auth activate-service-account --key-file=/tmp/gcp-key.json
+    - gcloud config set project ${PROJECT_ID}
+    - echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
+  script:
+    - ls -la
+    - cd frontend-libreria-don-hector || cd frontend # Intenta ambas rutas
+    # Docker setup
+    - export DOCKER_HOST="tcp://docker:2375"
+    - unset DOCKER_TLS_CERTDIR
+    - unset DOCKER_TLS_VERIFY
+    - |
+      sed -i 's/"build": "tsc -b && vite build"/"build": "vite build --mode production"/' package.json
+    - docker info
+    - docker build -t ${FRONTEND_IMAGE} .
+    - docker push ${FRONTEND_IMAGE}
+  only:
+    - main
+
+deploy-backend:
+  stage: deploy
+  before_script:
+    - echo "$GCP_SERVICE_KEY_BASE64" | base64 -d > /tmp/gcp-key.json
+    - gcloud auth activate-service-account --key-file=/tmp/gcp-key.json
+    - gcloud config set project ${PROJECT_ID}
+  script:
+    - >
+      gcloud run deploy ${BACKEND_SERVICE}
+      --image=${BACKEND_IMAGE}
+      --region=${REGION}
+      --platform=managed
+      --allow-unauthenticated
+      --cpu-boost
+      --timeout=600s
+      --set-env-vars="NODE_ENV=production,PG_HOST=34.44.201.200,PG_PORT=5432,PG_USER=postgres,PG_PASSWORD=Z5[BDaiOXD6/Q}G^,PG_DATABASE=libreria-don-hector-db,JWT_SECRET=baf79417cdc762262443f3e1b30c1d1d4977c0f603a989fe220b6bc5dc1d6d57eea81b47b9238748c0ba5dde5ab0abe384114e53e75e77cf2f057ad338dda8707dd878ee7e673bb8fb75d55922f657f2cf51b762257eee986cccccde84fe68de4264e7420b1bc0e3810bec91599a54d66db5239f4e2f1e03a7d8100d27325c583b110628e1b5b764e15258caa0f1c310b8042cab9918551b089152fcb1974b9a44fbb6b165fc149bcfce6d9b74cc718094254b595ac6c37057cd6092f02b0134434182446f26006c5d27881c2f99bc449870492e62c601b2a504d054e5ffd4aca21c76a87589f96faed7f3559e6b882e3322365305cb3ce70ec0c33c83258a95,JWT_EXPIRES_IN=1d,JWT_REFRESH_EXPIRY=7d,SALT_ROUNDS=10,PASSWORD_MIN_LENGTH=8,PASSWORD_MAX_LENGTH=50,EMAIL_USER=aydg23685@gmail.com,EMAIL_PASS=csclxqhlfffvorje,EMAIL_RECEIVER=aldovasquez2014@gmail.com,CORS_ORIGIN=https://frontend-libreria-395333172641.us-central1.run.app"
+    - BACKEND_URL=$(gcloud run services describe ${BACKEND_SERVICE} --region=${REGION} --format='value(status.url)')
+    - |
+      echo "Backend URL: ${BACKEND_URL}"
+  only:
+    - main
+  needs:
+    - build-backend
+
+deploy-frontend:
+  stage: deploy
+  before_script:
+    - echo "$GCP_SERVICE_KEY_BASE64" | base64 -d > /tmp/gcp-key.json
+    - gcloud auth activate-service-account --key-file=/tmp/gcp-key.json
+    - gcloud config set project ${PROJECT_ID}
+  script:
+    - BACKEND_URL=$(gcloud run services describe ${BACKEND_SERVICE} --region=${REGION} --format='value(status.url)' || echo "https://backend-libreria-395333172641.us-central1.run.app")
+    - >
+      gcloud run deploy ${FRONTEND_SERVICE}
+      --image=${FRONTEND_IMAGE}
+      --region=${REGION}
+      --platform=managed
+      --allow-unauthenticated
+      --set-env-vars="VITE_API_SERVICE_URL=${BACKEND_URL}"
+  only:
+    - main
+  needs:
+    - build-frontend
+    - deploy-backend
