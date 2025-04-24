@@ -1,0 +1,1 @@
+export {default as supervisorService} from './supervisor.service';

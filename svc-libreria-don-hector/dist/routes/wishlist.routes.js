@@ -1,0 +1,15 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.wishlistRoutes = void 0;
+const express_1 = require("express");
+const wishlist_controller_1 = require("../controllers/wishlist.controller");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const roles_1 = require("../dictionaries/roles");
+const { CLIENTE, EMPLEADO } = roles_1.ROLES;
+const controller = new wishlist_controller_1.WishlistController();
+const router = (0, express_1.Router)();
+exports.wishlistRoutes = router;
+router.use(auth_middleware_1.authMiddleware);
+router.post("/add", (0, auth_middleware_1.roleMiddleware)([CLIENTE, EMPLEADO]), controller.addToWishlist.bind(controller));
+router.get("/", (0, auth_middleware_1.roleMiddleware)([CLIENTE, EMPLEADO]), controller.getWishlist.bind(controller));
+router.post("/remove", (0, auth_middleware_1.roleMiddleware)([CLIENTE, EMPLEADO]), controller.removeFromWishlist.bind(controller));

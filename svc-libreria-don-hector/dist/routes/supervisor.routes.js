@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.supervisorRoutes = void 0;
+const express_1 = require("express");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const supervisor_controller_1 = require("../controllers/supervisor.controller");
+const roles_1 = require("../dictionaries/roles");
+const { GERENTE } = roles_1.ROLES;
+const router = (0, express_1.Router)();
+exports.supervisorRoutes = router;
+const controller = new supervisor_controller_1.SupervisorController();
+router.use(auth_middleware_1.authMiddleware);
+router.get('/getAll', (0, auth_middleware_1.roleMiddleware)([GERENTE]), controller.getAll.bind(controller));
+router.put('/update', (0, auth_middleware_1.roleMiddleware)([GERENTE]), controller.update.bind(controller));
+router.post('/create', (0, auth_middleware_1.roleMiddleware)([GERENTE]), controller.create.bind(controller));
+router.post('/deactive', (0, auth_middleware_1.roleMiddleware)([GERENTE]), controller.deactive.bind(controller));

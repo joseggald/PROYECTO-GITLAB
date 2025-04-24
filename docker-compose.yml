@@ -1,0 +1,74 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:latest
+    container_name: libreria-don-hector-db-svc
+    environment:
+      POSTGRES_USER: ${PG_USER:-postgres}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-27UiaEDByzzs}
+      POSTGRES_DB: ${PG_DATABASE:-libreria-don-hector-db}
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data2:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  backend:
+    build:
+      context: ./svc-libreria-don-hector
+      dockerfile: Dockerfile
+    container_name: libreria-don-hector-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - PORT=9000
+      - PG_HOST=postgres
+      - PG_PORT=5432
+      - PG_USER=${PG_USER:-postgres}
+      - PG_PASSWORD=${PG_PASSWORD:-27UiaEDByzzs}
+      - PG_DATABASE=${PG_DATABASE:-libreria-don-hector-db}
+      - JWT_SECRET=${JWT_SECRET:-baf79417cdc762262443f3e1b30c1d1d4977c0f603a989fe220b6bc5dc1d6d57}
+      - JWT_EXPIRES_IN=1d
+      - JWT_REFRESH_EXPIRY=7d
+      - SALT_ROUNDS=10
+      - PASSWORD_MIN_LENGTH=8
+      - PASSWORD_MAX_LENGTH=50
+      - DEBUG=true
+      - EMAIL_USER=aydg23685@gmail.com
+      - EMAIL_PASS=csclxqhlfffvorje
+      - EMAIL_RECEIVER=josegald49@gmail.com
+    ports:
+      - "9000:9000"
+    networks:
+      - app-network
+    restart: unless-stopped
+  frontend:
+     build:
+       context: ./frontend-libreria-don-hector
+       dockerfile: Dockerfile
+     container_name: libreria-don-hector-frontend
+     depends_on:
+       - backend
+     ports:
+       - "3000:3000"
+     environment:
+       - NODE_ENV=production
+       - VITE_API_URL=https://backend-libreria-395333172641.us-central1.run.app
+     networks:
+       - app-network
+     restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data2:

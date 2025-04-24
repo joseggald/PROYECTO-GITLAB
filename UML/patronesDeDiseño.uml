@@ -1,0 +1,187 @@
+@startuml Patrón MVC
+
+package "Patrón MVC" {
+  ' Capa Modelo
+  class Usuario {
+    -id: número
+    -nombreUsuario: texto
+    -correo: texto
+    -contraseña: texto
+    +crear(): Usuario
+    +validar(): booleano
+  }
+
+  ' Capa Vista (Respuesta)
+  interface RespuestaAPI<T> {
+    +estado: texto
+    +mensaje: texto
+    +datos: T
+    +marcaTiempo: texto
+  }
+
+  ' Capa Controlador
+  class ControladorUsuario {
+    -servicioUsuario: ServicioUsuario
+    +crear(peticion: Peticion, respuesta: Respuesta): void
+    +iniciarSesion(peticion: Peticion, respuesta: Respuesta): void
+  }
+
+  ' Capa Servicio
+  class ServicioUsuario {
+    +crearUsuario(datosUsuario: any): Promesa
+    +validarUsuario(nombreUsuario: texto, contraseña: texto): Promesa
+  }
+
+  note "Gestiona la lógica de negocio" as N1
+  note "Maneja las peticiones HTTP" as N2
+  note "Define la estructura de datos" as N3
+}
+
+' Relaciones
+ControladorUsuario --> Usuario : manipula
+ControladorUsuario --> RespuestaAPI : produce
+ControladorUsuario --> ServicioUsuario : usa
+ServicioUsuario --> Usuario : gestiona
+
+N1 .. ServicioUsuario
+N2 .. ControladorUsuario
+N3 .. Usuario
+
+@enduml
+
+
+@startuml Patrón Singleton
+
+package "Patrón Singleton" {
+  class GestorBaseDatos {
+    -static instancia: GestorBaseDatos
+    -conexiones: Mapa<texto, any>
+    -configuraciones: Mapa<texto, ConfigDB>
+    -TIEMPO_ESPERA_CONEXION: número
+    -GestorBaseDatos()
+    +{static} obtenerInstancia(): GestorBaseDatos
+    +inicializar(): Promesa<void>
+    +conectar(): Promesa<void>
+    +obtenerConexion(tipo: texto): any
+  }
+
+  note right of GestorBaseDatos
+    Solo una instancia de GestorBaseDatos
+    es creada y utilizada durante todo
+    el ciclo de vida de la aplicación.
+    
+    Asegura una gestión centralizada
+    de las conexiones a la base de datos.
+  end note
+}
+
+@enduml
+
+
+@startuml Patrón Fábrica
+
+package "Patrón Fábrica" {
+  interface ConexionBaseDatos {
+    +conectar(): void
+    +desconectar(): void
+    +ejecutarConsulta(consulta: texto): Resultado
+  }
+
+  class ConexionMongo {
+    +conectar(): void
+    +desconectar(): void
+    +ejecutarConsulta(consulta: texto): Resultado
+  }
+
+  class ConexionPostgres {
+    +conectar(): void
+    +desconectar(): void
+    +ejecutarConsulta(consulta: texto): Resultado
+  }
+
+  class FabricaBaseDatos {
+    +crearConexion(tipo: texto): ConexionBaseDatos
+  }
+
+  note "Implementación MongoDB" as N1
+  note "Implementación PostgreSQL" as N2
+  note "Fábrica de conexiones" as N3
+
+  ConexionBaseDatos <|.. ConexionMongo
+  ConexionBaseDatos <|.. ConexionPostgres
+  FabricaBaseDatos --> ConexionBaseDatos
+  
+  N1 .. ConexionMongo
+  N2 .. ConexionPostgres
+  N3 .. FabricaBaseDatos
+}
+
+@enduml
+
+
+@startuml Patrón Middleware
+
+package "Patrón Middleware" {
+  interface Middleware {
+    +manejar(peticion: Peticion, respuesta: Respuesta, siguiente: Funcion): void
+  }
+
+  class MiddlewareAutenticacion {
+    -gestorToken: GestorToken
+    +manejar(peticion: Peticion, respuesta: Respuesta, siguiente: Funcion): void
+    -verificarToken(token: texto): boolean
+  }
+
+  class MiddlewareErrores {
+    +manejar(error: Error, peticion: Peticion, respuesta: Respuesta, siguiente: Funcion): void
+    -registrarError(error: Error): void
+  }
+
+  class MiddlewareValidacion {
+    -esquemas: MapaEsquemas
+    +manejar(peticion: Peticion, respuesta: Respuesta, siguiente: Funcion): void
+    -validarDatos(datos: any, esquema: Esquema): Resultado
+  }
+
+  note "Verifica tokens JWT" as N1
+  note "Maneja errores globales" as N2
+  note "Valida datos de entrada" as N3
+
+  Middleware <|.. MiddlewareAutenticacion
+  Middleware <|.. MiddlewareErrores
+  Middleware <|.. MiddlewareValidacion
+
+  N1 .. MiddlewareAutenticacion
+  N2 .. MiddlewareErrores
+  N3 .. MiddlewareValidacion
+}
+
+@enduml
+
+
+@startuml Patrón Constructor
+
+package "Patrón Constructor" {
+  class GestorRespuestas {
+    +{static} enviarExito<T>(res: Respuesta, mensaje: texto, datos?: T): void
+    +{static} enviarError(res: Respuesta, mensaje: texto, codigoEstado?: número): void
+    -{static} construirRespuesta(tipo: texto, mensaje: texto, datos: any): RespuestaAPI
+  }
+
+  class RespuestaAPI {
+    +estado: texto
+    +mensaje: texto
+    +datos: any
+    +marcaTiempo: texto
+    +ruta: texto
+  }
+
+  note "Construye respuestas\nestandarizadas" as N1
+  note "Estructura de\nrespuesta API" as N2
+
+  GestorRespuestas ..> RespuestaAPI : crea
+  N1 .. GestorRespuestas
+  N2 .. RespuestaAPI
+}
+
+@enduml

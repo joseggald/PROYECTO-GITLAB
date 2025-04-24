@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgres:latest
+    container_name: libreria-don-hector-db 
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432" 
+    volumes:
+      - postgres_data_2:/var/lib/postgresql/data
+
+    command: 
+      - "postgres"
+      - "-c"
+      - "listen_addresses=*"
+    networks:
+      - app-network-2  # Cambiado el nombre de la red
+
+volumes:
+  postgres_data_2:  # Cambiado el nombre del volume
+
+networks:
+  app-network-2:  # Cambiado el nombre de la red
+    driver: bridge

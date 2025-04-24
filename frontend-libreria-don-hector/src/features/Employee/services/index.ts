@@ -1,0 +1,1 @@
+export {default as employeeService} from './employee.service';

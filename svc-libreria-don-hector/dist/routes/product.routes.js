@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.productRoutes = void 0;
+const express_1 = require("express");
+const product_controller_1 = require("../controllers/product.controller");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const roles_1 = require("../dictionaries/roles");
+const { EMPLEADO } = roles_1.ROLES;
+const router = (0, express_1.Router)();
+exports.productRoutes = router;
+const productController = new product_controller_1.ProductController();
+router.get('/', productController.getAllProducts.bind(productController));
+router.use(auth_middleware_1.authMiddleware);
+router.get('/product', (0, auth_middleware_1.roleMiddleware)([EMPLEADO]), productController.getProduct.bind(productController));

@@ -1,0 +1,99 @@
+import React from 'react';
+import { Product } from '../types/products.types';
+import ProductCard from './ProductCard';
+import { Button } from '@/components/ui/button';
+import { Plus, AlertTriangle, Search } from 'lucide-react';
+import { LoadingOverlay } from '@/components/Loader/Loader';
+
+interface ProductGridProps {
+  products: Product[];
+  isLoading: boolean;
+  isError: boolean;
+  onView: (product: Product) => void;
+  onEdit: (product: Product) => void;
+  onDelete: (product: Product) => void;
+  onCreateNew: () => void;
+}
+
+const ProductGrid: React.FC<ProductGridProps> = ({
+  products,
+  isLoading,
+  isError,
+  onView,
+  onEdit,
+  onDelete,
+  onCreateNew,
+}) => {
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <LoadingOverlay/>
+        <p className="mt-4 text-gray-600">Cargando productos...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+        <div className="bg-red-100 text-red-800 rounded-full p-3 mb-4">
+          <AlertTriangle className="h-6 w-6" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900">Error al cargar los productos</h3>
+        <p className="mt-2 text-gray-600">
+          Lo sentimos, ha ocurrido un error al cargar los productos. Por favor, intenta nuevamente más tarde.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold text-gray-800">
+          {products.length} {products.length === 1 ? 'Producto' : 'Productos'}
+        </h2>
+        <Button 
+          onClick={onCreateNew}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Nuevo Producto
+        </Button>
+      </div>
+
+      {products.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center px-4 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="bg-blue-100 text-blue-800 rounded-full p-3 mb-4">
+            <Search className="h-6 w-6" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900">No hay productos registrados</h3>
+          <p className="mt-2 text-gray-600 max-w-md">
+            No se encontraron productos en el sistema. Puedes crear un nuevo producto usando el botón "Nuevo Producto".
+          </p>
+          <Button 
+            onClick={onCreateNew}
+            className="mt-6 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Crear Primer Producto
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {products.map((product) => (
+            <ProductCard
+              key={product.id_producto}
+              product={product}
+              onView={onView}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ProductGrid;

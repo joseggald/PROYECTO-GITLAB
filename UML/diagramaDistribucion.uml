@@ -1,0 +1,101 @@
+@startuml Diagrama_Distribucion_Libreria_Don_Hector
+
+!theme plain
+skinparam linetype ortho
+skinparam BackgroundColor white
+skinparam componentStyle uml2
+
+' Estilos
+skinparam node {
+    BackgroundColor White
+    BorderColor Black
+    FontStyle bold
+}
+
+skinparam database {
+    BackgroundColor LightBlue
+    BorderColor Navy
+}
+
+skinparam artifact {
+    BackgroundColor White
+    BorderColor Gray
+}
+
+' Nodo Cliente
+node "<<dispositivo>>\nComputadora Cliente" as clienteNode {
+    node "<<ambiente de ejecución>>\nNavegador Web" as navegador {
+        artifact "Aplicación Frontend" as appCliente {
+            [Interfaz de Usuario]
+            [Módulos del Sistema]
+        }
+    }
+}
+
+' Nodo Servidor Principal
+node "<<dispositivo>>\nServidor Principal" as servidorNode {
+    node "<<ambiente de ejecución>>\nServidor Node.js" as serverApp {
+        artifact "Servidor de Aplicación" as appServer {
+            [API REST]
+            [Lógica de Negocio]
+        }
+    }
+}
+
+' Nodo Base de Datos
+node "<<dispositivo>>\nServidor de Base de Datos" as dbNode {
+    database "PostgreSQL" as db {
+        [Datos del Sistema]
+    }
+}
+
+' Nodo Almacenamiento
+node "<<dispositivo>>\nServidor de Archivos" as storageNode {
+    artifact "Sistema de Archivos" as fs {
+        [Imágenes]
+        [Documentos]
+        [Recursos Estáticos]
+    }
+}
+
+' Relaciones
+clienteNode -- servidorNode : "<<protocolo>>\nHTTPS"
+servidorNode -- dbNode : "<<protocolo>>\nTCP/5432"
+servidorNode -- storageNode : "<<protocolo>>\nSistema de Archivos"
+clienteNode ..> storageNode : "<<protocolo>>\nHTTPS"
+
+' Notas explicativas
+note right of clienteNode
+  **Especificaciones del Cliente**
+  * Acceso vía navegador web
+  * Interfaz responsiva
+  * Conexión a Internet requerida
+end note
+
+note right of servidorNode
+  **Características del Servidor**
+  * Gestión de peticiones API
+  * Manejo de autenticación
+  * Procesamiento de datos
+  * Generación de reportes
+end note
+
+note right of dbNode
+  **Base de Datos**
+  * Almacenamiento de:
+    - Usuarios y roles
+    - Inventario
+    - Ventas
+    - Facturas
+    - Wishlist
+end note
+
+note right of storageNode
+  **Almacenamiento**
+  * Imágenes de productos
+  * Archivos del sistema
+  * Recursos estáticos
+  * Documentos generados
+end note
+
+@enduml

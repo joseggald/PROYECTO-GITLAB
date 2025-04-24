@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.bookRoutes = void 0;
+const express_1 = require("express");
+const book_controller_1 = require("../controllers/book.controller");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const roles_1 = require("../dictionaries/roles");
+const { CLIENTE, SUPERVISOR, EMPLEADO } = roles_1.ROLES;
+const controller = new book_controller_1.BookController();
+const router = (0, express_1.Router)();
+exports.bookRoutes = router;
+router.use(auth_middleware_1.authMiddleware);
+router.post("/search", (0, auth_middleware_1.roleMiddleware)([CLIENTE, EMPLEADO]), controller.searchBooks.bind(controller));
+router.post("/add", (0, auth_middleware_1.roleMiddleware)([SUPERVISOR]), controller.addBook.bind(controller));
+router.put("/update/:id_producto", (0, auth_middleware_1.roleMiddleware)([SUPERVISOR]), controller.updateBook.bind(controller));
+router.delete("/delete/:id_producto", (0, auth_middleware_1.roleMiddleware)([SUPERVISOR]), controller.deleteBook.bind(controller));

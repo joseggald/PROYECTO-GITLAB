@@ -1,0 +1,17 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.invoiceRoutes = void 0;
+const express_1 = require("express");
+const invoce_controller_1 = require("../controllers/invoce.controller");
+const roles_1 = require("../dictionaries/roles");
+const router = (0, express_1.Router)();
+exports.invoiceRoutes = router;
+const invoiceController = new invoce_controller_1.InvoiceController();
+const { SUPERVISOR, EMPLEADO, GERENTE, CLIENTE } = roles_1.ROLES;
+//router.use(authMiddleware);
+router.post('/create', invoiceController.createInvoice.bind(invoiceController));
+router.get('/invoices/:id_usuario', invoiceController.listInvoicesByUser.bind(invoiceController));
+router.get('/fel/:id_factura', invoiceController.getInvoiceById.bind(invoiceController));
+router.get('/payment-methods', invoiceController.getPaymentMethods.bind(invoiceController));
+router.get('/all_invoices', invoiceController.getAllInvoices.bind(invoiceController));
+router.get("/download/:id_factura/pdf", invoiceController.generateInvoicePDF.bind(invoiceController));

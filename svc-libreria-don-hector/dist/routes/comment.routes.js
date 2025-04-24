@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.commentRoutes = void 0;
+const express_1 = require("express");
+const comment_controller_1 = require("../controllers/comment.controller");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const roles_1 = require("../dictionaries/roles");
+const { CLIENTE, SUPERVISOR, EMPLEADO } = roles_1.ROLES;
+const controller = new comment_controller_1.CommentController();
+const router = (0, express_1.Router)();
+exports.commentRoutes = router;
+router.use(auth_middleware_1.authMiddleware);
+router.get("/:id_producto", (0, auth_middleware_1.roleMiddleware)([CLIENTE, SUPERVISOR, EMPLEADO]), controller.getByProductId.bind(controller));
+router.post("/", (0, auth_middleware_1.roleMiddleware)([CLIENTE, EMPLEADO]), controller.create.bind(controller));
+router.put("/:id_comentario", (0, auth_middleware_1.roleMiddleware)([CLIENTE]), controller.update.bind(controller));
+router.delete("/:id_comentario", (0, auth_middleware_1.roleMiddleware)([CLIENTE]), controller.delete.bind(controller));

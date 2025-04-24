@@ -1,0 +1,222 @@
+@startuml Diagrama_Componentes_Libreria_Don_Hector
+
+!theme plain
+skinparam componentStyle uml2
+skinparam linetype ortho
+skinparam BackgroundColor white
+skinparam note {
+    BackgroundColor LightYellow
+    BorderColor DarkGray
+}
+
+skinparam package {
+    BackgroundColor white
+    BorderColor black
+    FontStyle bold
+}
+
+' FRONTEND LAYER
+package "Frontend Layer" {
+    package "Core Framework" {
+        [React + TypeScript] as ReactCore
+        [TanStack Router] as Router
+        [Zustand Store] as Store
+        [React Query] as QueryClient
+    }
+
+    package "Módulos Frontend" {
+        package "Módulo Autenticación" {
+            [Login Form] as LoginForm
+            [Auth Guard] as AuthGuard
+            [useLoginForm] as LoginHook
+            [AuthService] as AuthService
+        }
+
+        package "Módulo Administración" {
+            [Gestión Supervisores] as SupervisorMgmt
+            [Gestión Empleados] as EmployeeMgmt
+            [Reportes] as Reports
+            [useSupervisor] as SupervisorHook
+            [useEmpleado] as EmpleadoHook
+        }
+
+        package "Módulo Ventas" {
+            [POS] as POSSystem
+            [Facturas] as Invoices
+            [useVentas] as VentasHook
+            [useFactura] as FacturaHook
+        }
+
+        package "Módulo Inventario" {
+            [Gestión Productos] as ProductMgmt
+            [Gestión Libros] as BookMgmt
+            [useProducto] as ProductHook
+            [useLibro] as LibroHook
+        }
+
+        package "Módulo Cliente" {
+            [Lista Deseos] as Wishlist
+            [Reseñas] as Reviews
+            [useListaDeseos] as WishlistHook
+            [useResenas] as ReviewHook
+        }
+        
+        package "Servicios de Módulos"{
+            [Service] as Service
+        }
+    }
+
+    package "Servicios Frontend" {
+        [API Client] as APIClient
+        [Token Service] as TokenService
+        [Session Service] as SessionService
+    }
+
+    package "Componentes UI" {
+        [UI Components] as UIComponents
+        [Forms] as Forms
+        [Tables] as Tables
+    }
+}
+
+' BACKEND LAYER
+package "Backend Layer" {
+    package "API Gateway" {
+        [Express Server] as ExpressServer
+        [Route Handler] as RouteHandler
+        [Error Handler] as ErrorHandler
+    }
+
+    package "Middleware" {
+        [Auth Middleware] as AuthMiddleware
+        [Validation Middleware] as ValidationMiddleware
+        [Logger Middleware] as LoggerMiddleware
+    }
+
+    package "Controladores" {
+        [Usuario Controller] as UsuarioCtrl
+        [Empleado Controller] as EmpleadoCtrl
+        [Supervisor Controller] as SupervisorCtrl
+        [Producto Controller] as ProductoCtrl
+        [Venta Controller] as VentaCtrl
+        [Lista Deseos Controller] as ListaDeseosCtrl
+    }
+
+    package "Servicios Backend" {
+        [Usuario Service] as UsuarioSvc
+        [Empleado Service] as EmpleadoSvc
+        [Supervisor Service] as SupervisorSvc
+        [Producto Service] as ProductoSvc
+        [Venta Service] as VentaSvc
+        [Lista Deseos Service] as ListaDeseosSvc
+    }
+
+    package "Data Access" {
+        [Database Manager] as DBManager
+        [Query Builder] as QueryBuilder
+        [Connection Pool] as Pool
+    }
+}
+
+' DATABASE LAYER
+package "Database Layer" {
+    database "PostgreSQL" {
+        package "Tablas Core" {
+            [Usuarios] as UsersTbl
+            [Empleados] as EmpleadosTbl
+            [Supervisores] as SupervisoresTbl
+            [Productos] as ProductosTbl
+            [Libros] as LibrosTbl
+            [Ventas] as VentasTbl
+            [Facturas] as FacturasTbl
+            [Lista_Deseos] as ListaDeseosTbl
+            [Detalle_Lista_Deseos] as DetalleListaDeseosTbl
+            [Comentarios] as ComentariosTbl
+            [Metodo_Pago] as MetodoPagoTbl
+        }
+    }
+}
+
+' RELACIONES PRINCIPALES
+' Frontend Core
+ReactCore --> Router
+ReactCore --> Store
+ReactCore --> QueryClient
+
+' Frontend Modules a Servicios
+LoginForm --> LoginHook
+LoginHook --> AuthService
+AuthService --> APIClient
+
+SupervisorMgmt --> SupervisorHook
+EmployeeMgmt --> EmpleadoHook
+POSSystem --> VentasHook
+ProductMgmt --> ProductHook
+Wishlist --> WishlistHook
+EmpleadoHook --> Service
+VentasHook --> Service
+SupervisorHook --> Service
+ProductHook --> Service
+WishlistHook --> Service
+Service --> APIClient
+
+' Backend Flow
+ExpressServer --> RouteHandler
+RouteHandler --> AuthMiddleware
+AuthMiddleware --> UsuarioCtrl
+
+UsuarioCtrl --> UsuarioSvc
+EmpleadoCtrl --> EmpleadoSvc
+SupervisorCtrl --> SupervisorSvc
+ProductoCtrl --> ProductoSvc
+VentaCtrl --> VentaSvc
+ListaDeseosCtrl --> ListaDeseosSvc
+
+' Database Access
+UsuarioSvc --> DBManager
+EmpleadoSvc --> DBManager
+SupervisorSvc --> DBManager
+ProductoSvc --> DBManager
+VentaSvc --> DBManager
+ListaDeseosSvc --> DBManager
+
+DBManager --> Pool
+Pool --> PostgreSQL
+
+' NOTAS TECNOLÓGICAS
+note right of ReactCore
+**Frontend Stack**
+- React
+- TypeScript 
+- TanStack Router
+- Zustand (Estado)
+- React Query
+- Tailwind CSS
+- Shadcn/ui
+- Zod (Validación)
+end note
+
+note right of ExpressServer
+**Backend Stack**
+- Node.js
+- Express
+- TypeScript
+- JWT Auth
+- Joi Validation
+- Winston Logger
+- pg (PostgreSQL)
+end note
+
+note left of DBManager
+**Patrones Implementados**
+- Repository Pattern
+- Service Layer
+- Factory Pattern
+- Singleton
+- MVC
+- HOC (Frontend)
+- Custom Hooks
+- Provider Pattern
+end note
+
+@enduml
